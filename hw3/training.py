@@ -105,9 +105,6 @@ class Trainer(abc.ABC):
             if best_acc is None or test_result.accuracy > best_acc:
                 best_acc = test_result.accuracy
                 epochs_without_improvement = 0
-
-                if checkpoints:
-                    self.save_checkpoint(checkpoints)
             else:
                 epochs_without_improvement += 1
 
