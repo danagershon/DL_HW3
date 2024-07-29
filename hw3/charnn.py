@@ -23,11 +23,9 @@ def char_maps(text: str):
     #  It's best if you also sort the chars before assigning indices, so that
     #  they're in lexical order.
     # ====== YOUR CODE: ======
-    
     sorted_unique_chars = sorted(set(text))
     idx_to_char = dict(enumerate(sorted_unique_chars))
     char_to_idx = {char: idx for idx, char in idx_to_char.items()}
-
     # ========================
     return char_to_idx, idx_to_char
 
@@ -79,7 +77,6 @@ def chars_to_onehot(text: str, char_to_idx: dict) -> Tensor:
     for row_in_tensor, char in enumerate(text):
         char_index = char_to_idx[char]
         result[row_in_tensor, char_index] = 1
-
     # ========================
     return result
 
@@ -96,15 +93,10 @@ def onehot_to_chars(embedded_text: Tensor, idx_to_char: dict) -> str:
     """
     # TODO: Implement the reverse-embedding.
     # ====== YOUR CODE: ======
-    N = embedded_text.shape[0]
-    text = [None] * N
-
-    for row_index, row in enumerate(embedded_text):
-        char_index = torch.argmax(row).item()  # find the index of the 1 in the row
-        text[row_index] = idx_to_char[char_index]
-
-    result = "".join(text)
-
+    # Get the indices of the max values in each row (the one-hot indices)
+    indices = torch.argmax(embedded_text, dim=1)
+    chars = [idx_to_char[idx.item()] for idx in indices]
+    result = "".join(chars)
     # ========================
     return result
 
@@ -207,7 +199,7 @@ def generate_from_model(model, start_sequence, n_chars, char_maps, T):
             probs = hot_softmax(scores, temperature=T)
             # sample one next char according to probabilities
             next_char_idx = torch.multinomial(probs, num_samples=1)
-            # get the next char from its index
+            # get the next char by its index
             next_char = idx_to_char[next_char_idx.item()]
             # add the next char to the output
             out_text += next_char
@@ -286,28 +278,31 @@ class MultilayerGRU(nn.Module):
         # TODO: READ THIS SECTION!!
 
         # ====== YOUR CODE: ======
-        self.dropout_layer = nn.Dropout(dropout)
-        # Create the parameters for all layers
-        for i in range(n_layers):
-            input_dim = in_dim if i == 0 else h_dim
+
+        # Create the parameters for each layer
+        for layer_idx in range(n_layers):
+            input_dim = in_dim if layer_idx == 0 else h_dim
             layer_dict = {
-                'xz': nn.Linear(input_dim, h_dim),
-                'hz': nn.Linear(h_dim, h_dim, bias=False),
-                'xr': nn.Linear(input_dim, h_dim),
-                'hr': nn.Linear(h_dim, h_dim, bias=False),
-                'xg': nn.Linear(input_dim, h_dim),
-                'hg': nn.Linear(h_dim, h_dim, bias=False)
+                # TODO LEFT: note that I decided to flip the bias values, check what is right
+                'wxz': nn.Linear(input_dim, h_dim, bias=False),
+                'whz': nn.Linear(h_dim, h_dim, bias=True),
+                'wxr': nn.Linear(input_dim, h_dim, bias=False),
+                'whr': nn.Linear(h_dim, h_dim, bias=True),
+                'wxg': nn.Linear(input_dim, h_dim, bias=False),
+                'whg': nn.Linear(h_dim, h_dim, bias=True)
             }
             for key, param in layer_dict.items():
-                self.add_module(f'layer_{i}_{key}', param)
+                self.add_module(name=f'layer_{layer_idx}_{key}', module=param)
             self.layer_params.append(layer_dict)
 
+        self.dropout = nn.Dropout(p=dropout)
+
         # Output layer
-        self.fc = nn.Linear(h_dim, out_dim)
-        self.add_module('fc', self.fc)
+        self.why = nn.Linear(h_dim, out_dim, bias=True)
+        self.add_module(name='why', module=self.why)
         # ========================
 
-    def forward_original(self, input: Tensor, hidden_state: Tensor = None):
+    def forward(self, input: Tensor, hidden_state: Tensor = None):
         """
         :param input: Batch of sequences. Shape should be (B, S, I) where B is
         the batch size, S is the length of each sequence and I is the
@@ -337,6 +332,10 @@ class MultilayerGRU(nn.Module):
         layer_output = None
 
         # TODO: READ THIS SECTION!!
+
+        # TODO LEFT: this implementation was given by segel, might be accidently (but I also implemented my own version)
+        # I implemented __init__ to be compatible with it
+
         # ====== YOUR CODE: ======
         # Loop over layers of the model
         for layer_idx in range(self.n_layers):
@@ -377,7 +376,8 @@ class MultilayerGRU(nn.Module):
         # ========================
         return layer_output, hidden_state
     
-    def forward(self, input: Tensor, hidden_state: Tensor = None):
+    # TODO LEFT: remove this
+    def forward_my(self, input: Tensor, hidden_state: Tensor = None):
         """
         :param input: Batch of sequences. Shape should be (B, S, I) where B is
         the batch size, S is the length of each sequence and I is the
@@ -424,13 +424,13 @@ class MultilayerGRU(nn.Module):
                 r_t = torch.sigmoid(layer['xr'](x_t) + layer['hr'](h_t))
                 g_t = torch.tanh(layer['xg'](x_t) + layer['hg'](r_t * h_t))
                 h_t = z_t * h_t + (1 - z_t) * g_t
-                x_t = self.dropout_layer(h_t)
+                x_t = self.dropout(h_t)
                 new_states.append(h_t)
             layer_states = new_states
             outputs.append(x_t)
 
         layer_output = torch.stack(outputs, dim=1)
         hidden_state = torch.stack(layer_states, dim=1)
-        layer_output = self.fc(layer_output)
+        layer_output = self.why(layer_output)
         # ========================
         return layer_output, hidden_state

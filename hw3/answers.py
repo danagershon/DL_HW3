@@ -22,12 +22,12 @@ def part1_rnn_hyperparams():
     )
     # TODO: Set the hyperparameters to train the model.
     # ====== YOUR CODE: ======
-    hypers = dict(
-        batch_size=512,
+    hypers = dict(  # TODO LEFT: tweak if have time
+        batch_size=512,  # largeer batch size => speed training
         seq_len=64,
-        h_dim=128,
-        n_layers=2,
-        dropout=0.3,
+        h_dim=128,  # smaller h_dim => speed training but consider 256
+        n_layers=2,  # fewer layers => speed training but consider 3
+        dropout=0.3,  # consider 0.2
         learn_rate=0.002,
         lr_sched_factor=0.1,
         lr_sched_patience=3,
@@ -89,6 +89,36 @@ def part2_vae_hyperparams():
     hypers["learn_rate"] = 0.0002
     hypers["betas"] = (0.5, 0.999)
     # ========================
+    return hypers
+
+
+def part3_gan_hyperparams():
+    hypers = dict(
+        batch_size=0, 
+        z_dim=0, 
+        discriminator_optimizer=0, 
+        generator_optimizer=0, 
+        data_label=0,
+        label_noise=0, 
+    )
+
+    hypers = dict(
+        batch_size=64, 
+        z_dim=100, 
+        discriminator_optimizer={
+            'type': 'Adam',
+            'lr': 0.0002,
+            'betas': (0.5, 0.999)
+        }, 
+        generator_optimizer={
+            'type': 'Adam',
+            'lr': 0.0002,
+            'betas': (0.5, 0.999)
+        }, 
+        data_label=1.0,  # Assuming real data is labeled as 1
+        label_noise=0.1  # Small noise to the labels
+    )
+
     return hypers
 
 

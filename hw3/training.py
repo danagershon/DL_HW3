@@ -267,12 +267,12 @@ class RNNTrainer(Trainer):
         self.optimizer.zero_grad()
         # forward pass
         output, self.hidden_state = self.model(x, self.hidden_state)
+        # don't compute gradients for hidden states
+        self.hidden_state = self.hidden_state.detach()
         output = torch.transpose(output, 1, 2)
         loss = self.loss_fn(output, y)
         loss.backward()
         self.optimizer.step()
-        # don't compute gradients for hidden states
-        self.hidden_state = self.hidden_state.detach()
         y_pred = torch.argmax(output, dim=1)
         num_correct = (y == y_pred).sum()
         # ========================
