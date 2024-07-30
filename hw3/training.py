@@ -105,6 +105,9 @@ class Trainer(abc.ABC):
             if best_acc is None or test_result.accuracy > best_acc:
                 best_acc = test_result.accuracy
                 epochs_without_improvement = 0
+
+                if checkpoints is not None:  #TODO LEFT: see if this is needed
+                    save_checkpoint = True
             else:
                 epochs_without_improvement += 1
 
@@ -297,7 +300,6 @@ class RNNTrainer(Trainer):
             # forward pass
             output, self.hidden_state = self.model(x, self.hidden_state)
             output = torch.transpose(output, 1, 2)
-            # loss calculation
             loss = self.loss_fn(output, y)
             y_pred = torch.argmax(output, dim=1)
             num_correct = (y == y_pred).sum()
