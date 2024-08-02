@@ -24,33 +24,13 @@ class Discriminator(nn.Module):
 
         # Define the convolutional layers
         modules = []
-        """channels = [in_channels, 64, 128, 256, 512, 1]
+        channels = [in_channels, 64, 128, 256, 512, 1]
         for i in range(len(channels) - 1):
             modules.append(nn.Conv2d(channels[i], channels[i+1], kernel_size=4, stride=2 if i < 4 else 1, padding=1 if i < 4 else 0))
             if i < len(channels) - 2:  # No activation or batch norm after the last layer
                 if i > 0:  # No batch norm after the first layer
                     modules.append(nn.BatchNorm2d(channels[i+1]))
-                modules.append(nn.LeakyReLU(0.2, inplace=True))"""
-        
-        output_channels = 512
-
-        modules = [
-            nn.Conv2d(in_channels, 128, 3, padding=1, stride=1),
-            nn.BatchNorm2d(128),
-            nn.LeakyReLU(0.2, inplace=True),
-            nn.AvgPool2d(2),
-            nn.Conv2d(128, 256, 3, padding=1, stride=1),
-            nn.BatchNorm2d(256),
-            nn.LeakyReLU(0.2, inplace=True),
-            nn.AvgPool2d(2),
-            nn.Conv2d(256, 512, 3, padding=2, stride=1),
-            nn.BatchNorm2d(512),
-            nn.LeakyReLU(0.2, inplace=True),
-            nn.AvgPool2d(2),
-            nn.Conv2d(512, output_channels, 3, padding=1, stride=1),
-            nn.LeakyReLU(0.2, inplace=True),
-            nn.AvgPool2d(2),
-        ]
+                modules.append(nn.LeakyReLU(0.2, inplace=True))
 
         self.cnn = nn.Sequential(*modules)
         self.final_size = self._calc_num_cnn_features(in_size)
@@ -99,7 +79,7 @@ class Generator(nn.Module):
         #  You can assume a fixed image size.
         # ====== YOUR CODE: ======
         # Define the transpose convolutional layers using a loop
-        """modules = []
+        modules = []
         channels = [z_dim, 512, 256, 128, 64, out_channels]
         strides = [1, 2, 2, 2, 2]
         paddings = [0, 1, 1, 1, 1]
@@ -111,29 +91,7 @@ class Generator(nn.Module):
                 modules.append(nn.BatchNorm2d(channels[i+1]))
                 modules.append(nn.ReLU(True))
             else:
-                modules.append(nn.Tanh())  # Tanh activation for the last layer"""
-        
-        # Define the initial feature map size
-        self.features_c = 512
-        self.features_h = featuremap_size
-        self.features_w = featuremap_size
-        self.features_size = self.features_c * self.features_h * self.features_w
-        self.z_to_features = nn.Linear(z_dim, self.features_size)
-
-        # Define the transpose convolutional layers
-        modules = [
-            nn.ConvTranspose2d(self.features_c, 256, kernel_size=4, stride=2, padding=1),  # 4x4 -> 8x8
-            nn.BatchNorm2d(256),
-            nn.ReLU(True),
-            nn.ConvTranspose2d(256, 128, kernel_size=4, stride=2, padding=1),  # 8x8 -> 16x16
-            nn.BatchNorm2d(128),
-            nn.ReLU(True),
-            nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1),  # 16x16 -> 32x32
-            nn.BatchNorm2d(64),
-            nn.ReLU(True),
-            nn.ConvTranspose2d(64, out_channels, kernel_size=4, stride=2, padding=1),  # 32x32 -> 64x64
-            nn.Tanh()  # Output should be in the range [-1, 1]
-        ]
+                modules.append(nn.Tanh())  # Tanh activation for the last layer
         
         self.net = nn.Sequential(*modules)
         # ========================
@@ -171,9 +129,8 @@ class Generator(nn.Module):
         #  Don't forget to make sure the output instances have the same
         #  dynamic range as the original (real) images.
         # ====== YOUR CODE: ======
-        batch_size = z.size(0)
-        features = self.z_to_features(z).view(batch_size, self.features_c, self.features_h, self.features_w)
-        x = self.net(features)
+        z = z.view(z.size(0), self.z_dim, 1, 1)  # Reshape z to (N, z_dim, 1, 1)
+        x = self.net(z)
         # ========================
         return x
 
@@ -324,9 +281,7 @@ def save_checkpoint(gen_model, dsc_losses, gen_losses, checkpoint_file):
     # Criterion: Save if the generator's avg loss improved
     if len(gen_losses) > 1 and gen_losses[-1] < min(gen_losses[:-1]):
         gen_model = {
-            'epoch': len(gen_losses),
-            'gen_model_state_dict': gen_model.state_dict(),
-            'gen_loss': gen_losses[-1],
+            'model_state_dict': gen_model.state_dict(),
             'dsc_losses': dsc_losses,
             'gen_losses': gen_losses
         }
