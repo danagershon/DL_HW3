@@ -345,7 +345,14 @@ class TransformerEncoderTrainer(Trainer):
         # TODO:
         #  fill out the training loop.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        self.optimizer.zero_grad()
+        # forward pass
+        output= self.model(x, padding_mask=attention_mask) #TODO LEFT what is input_ids?
+        loss = self.loss_fn(output, label)
+        loss.backward()
+        self.optimizer.step()
+        y_pred = torch.argmax(output, dim=1)
+        num_correct = (label == y_pred).sum()
         # ========================
         
         
