@@ -37,20 +37,22 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
     ## Think how you can obtain the indices corresponding to the entries in the sliding windows using tensor operations (without loops),
     ## and then use these indices to compute the dot products directly.
     # ====== YOUR CODE: ======
-    b = torch.zeros([batch_size, seq_len, seq_len]) #batch_size, 
-    #print(q.size(), k.size())
+    b = torch.ones([batch_size, seq_len, seq_len]) * (-float('inf'))#batch_size, 
     
     #2d tensor containing the indexes to calculate dot prod on, i.e [0,0],[1,1], [2,1], [1,2]]
     masked_ind = torch.tensor([], dtype=int)
     for i in range(window_size//2 + 1):
         masked_ind = torch.cat([masked_ind, torch.stack([torch.arange(i, seq_len), torch.arange(0, seq_len-i)], dim=1)])
         masked_ind = torch.cat([masked_ind, torch.stack([torch.arange(0, seq_len-i), torch.arange(i, seq_len)], dim=1)])
-        
-    #On these indices, do b = (q @ mask @ k.transpose(1,-1))
+    
+    #On these indices, do b = (q @ k.transpose(1,-1))
     b[:, masked_ind[:,0], masked_ind[:,1]] = (q[:, masked_ind[:,0], :] * k[:, masked_ind[:,1], :]).sum(dim=2)
-    print(b)
+    print("windowed b", b)
+    #print("original b", (q @ k.transpose(1,-1)))
+    #print("original attention",  torch.softmax((q @ k.transpose(1,-1)) / math.sqrt(embed_dim), dim=1) @ v)
+    
     b = b / math.sqrt(embed_dim)
-    attention = torch.softmax(b, dim=1)
+    attention = torch.softmax(b, dim=2)
     values = attention @ v
     # ========================
 
