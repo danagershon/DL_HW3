@@ -61,33 +61,30 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
     
     b = b / math.sqrt(embed_dim)
 
-    #Padding Mask
+    #Padding Mask - for b
     if padding_mask != None:
         dims_to_rep = [1,num_heads]
         if num_heads == None:
             dims_to_rep = [1]
         
-        padding_mask = padding_mask.unsqueeze(1)
+        padding_mask = padding_mask.unsqueeze(1) #Now padding_mask = [B, 1, S]
         padding_mask_2 = padding_mask.unsqueeze(1)
         padding_mask_2 = padding_mask_2.repeat(*dims_to_rep, seq_len, 1)  #Now padding_mask_2 = [B, 1, 1, S]
         b[padding_mask_2 == 0] = -float('inf')
-        padding_mask_2 = padding_mask.unsqueeze(-1)
-        padding_mask_2 = padding_mask_2.repeat(*dims_to_rep, 1, seq_len)  #Now padding_mask_2 = [B, 1, S, 1]
-        b[padding_mask_2 == 0] = -float('inf')
+        padding_mask_3 = padding_mask.unsqueeze(-1)
+        padding_mask_3 = padding_mask_3.repeat(*dims_to_rep, 1, seq_len)  #Now padding_mask_3 = [B, 1, S, 1]
+        b[padding_mask_3 == 0] = -float('inf')
 
     #Calculate Attention
     attention = torch.softmax(b, dim=-1)
 
-    #Fix padded softmax (that are all -inf)
+    #Fix padded softmax - for attention (otherwise we have nan where in the mask)
     if padding_mask != None:
-        padding_mask_2 = padding_mask.unsqueeze(1)
-        padding_mask_2 = padding_mask_2.repeat(*dims_to_rep, seq_len, 1)
-        attention[padding_mask_2 == 0] = 0
-        padding_mask_2 = padding_mask.unsqueeze(-1)
-        padding_mask_2 = padding_mask_2.repeat(*dims_to_rep, 1, seq_len)
-        attention[padding_mask_2 == 0] = 0
+        attention = torch.nan_to_num(attention, 0)
+        #attention[padding_mask_2 == 0] = 0
+        #attention[padding_mask_3 == 0] = 0
 
-    #print(attention)
+    print(attention)
     values = attention @ v
     # ========================
 
@@ -224,11 +221,11 @@ class EncoderLayer(nn.Module):
         w = self.feed_forward(z)
         w = self.dropout(w)
 
-        x = self.norm2(w + z)
+        res = self.norm2(w + z)
         
         # ========================
         
-        return x
+        return res
     
     
     
@@ -275,7 +272,14 @@ class Encoder(nn.Module):
         #  5) Apply the classification MLP to the output vector corresponding to the special token [CLS] 
         #     (always the first token) to receive the logits.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        z = self.encoder_embedding(sentence)
+        z = self.positional_encoding(z)
+        z = self.dropout(z)
+        for encoder in self.encoder_layers:
+            z = encoder(z, padding_mask)
+
+        #Extract the value of [CLS]
+        output = self.classification_mlp(z[:,0,:]) #TODO LEFT Is this how to get the CLS token value?
         
         # ========================
         
