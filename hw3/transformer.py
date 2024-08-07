@@ -37,7 +37,9 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
     ## Think how you can obtain the indices corresponding to the entries in the sliding windows using tensor operations (without loops),
     ## and then use these indices to compute the dot products directly.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    b = (q @ k.transpose(1,-1)) / math.sqrt(embed_dim)
+    attention = torch.softmax(b, dim=1)
+    values = attention @ v
     # ========================
 
 

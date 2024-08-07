@@ -29,11 +29,17 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
     #  Compute the sliding window attention.
     # NOTE: We will not test your implementation for efficiency, but you are required to follow these two rules:
     # 1) Implement the function without using for loops.
-    # 2) DON'T compute all dot products and then remove the uneccessary comptutations 
-    #    (both for tokens that aren't in the window, and for tokens that correspond to padding according to the 'padding mask').
+    # 2) DON'T compute all dot products and then remove the uneccessary comptutations
+    #    (You can compute the dot products for any entry, even if it corresponds to padding, as long as it is within the window).
     # Aside from these two rules, you are free to implement the function as you wish. 
+    ## HINT: There are several ways to implement this function, and while you are free to implement it however you may wish,
+    ## some are more intuitive than others. We suggest you to consider the following:
+    ## Think how you can obtain the indices corresponding to the entries in the sliding windows using tensor operations (without loops),
+    ## and then use these indices to compute the dot products directly.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    b = (q @ k.transpose(1,-1)) / math.sqrt(embed_dim)
+    attention = torch.softmax(b, dim=1)
+    values = attention @ v
     # ========================
 
 
@@ -207,8 +213,9 @@ class Encoder(nn.Module):
         #  Implement the forward pass of the encoder.
         #  1) Apply the embedding layer to the input.
         #  2) Apply positional encoding to the output of step 1.
-        #  3) Apply the specified number of encoder layers.
-        #  4) Apply the classification MLP to the output vector corresponding to the special token [CLS] 
+        #  3) Apply a dropout layer to the output of the positional encoding.
+        #  4) Apply the specified number of encoder layers.
+        #  5) Apply the classification MLP to the output vector corresponding to the special token [CLS] 
         #     (always the first token) to receive the logits.
         # ====== YOUR CODE: ======
         raise NotImplementedError()
@@ -228,5 +235,4 @@ class Encoder(nn.Module):
         preds = torch.round(torch.sigmoid(logits))
         return preds
 
-    
     
