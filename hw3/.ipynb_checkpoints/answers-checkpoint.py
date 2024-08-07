@@ -22,7 +22,16 @@ def part1_rnn_hyperparams():
     )
     # TODO: Set the hyperparameters to train the model.
     # ====== YOUR CODE: ======
-    
+    hypers = dict(  # TODO LEFT: tweak if have time
+        batch_size=512,  # largeer batch size => speed training
+        seq_len=64,
+        h_dim=128,  # smaller h_dim => speed training but consider 256
+        n_layers=2,  # fewer layers => speed training but consider 3
+        dropout=0.3,  # consider 0.2
+        learn_rate=0.002,
+        lr_sched_factor=0.1,
+        lr_sched_patience=3,
+    )
     # ========================
     return hypers
 
@@ -32,7 +41,8 @@ def part1_generation_params():
     temperature = 0.0001
     # TODO: Tweak the parameters to generate a literary masterpiece.
     # ====== YOUR CODE: ======
-    
+    start_seq = 'ACT I.'
+    temperature = 0.5
     # ========================
     return start_seq, temperature
 
@@ -72,8 +82,43 @@ def part2_vae_hyperparams():
     )
     # TODO: Tweak the hyperparameters to generate a former president.
     # ====== YOUR CODE: ======
-   
+    hypers["batch_size"] = 96
+    hypers["h_dim"] = 512
+    hypers["z_dim"] = 64
+    hypers["x_sigma2"] = 0.1
+    hypers["learn_rate"] = 0.0002
+    hypers["betas"] = (0.5, 0.999)
     # ========================
+    return hypers
+
+
+def part3_gan_hyperparams():
+    hypers = dict(
+        batch_size=0, 
+        z_dim=0, 
+        discriminator_optimizer=0, 
+        generator_optimizer=0, 
+        data_label=0,
+        label_noise=0, 
+    )
+
+    hypers = dict(
+        batch_size=64, 
+        z_dim=100, 
+        discriminator_optimizer={
+            'type': 'Adam',
+            'lr': 0.0002,
+            'betas': (0.5, 0.999)
+        }, 
+        generator_optimizer={
+            'type': 'Adam',
+            'lr': 0.0002,
+            'betas': (0.5, 0.999)
+        }, 
+        data_label=1.0,  # Assuming real data is labeled as 1
+        label_noise=0.1  # Small noise to the labels
+    )
+
     return hypers
 
 
@@ -112,13 +157,13 @@ PART3_CUSTOM_DATA_URL = None
 
 def part3_transformer_encoder_hyperparams():
     hypers = dict(
-        embed_dim = 0, 
-        num_heads = 0,
-        num_layers = 0,
-        hidden_dim = 0,
-        window_size = 0,
-        droupout = 0.0,
-        lr=0.0,
+        embed_dim = 128, 
+        num_heads = 8,
+        num_layers = 5,
+        hidden_dim = 25,
+        window_size = 4,
+        dropout = 0.4,
+        lr=0.03,
     )
 
     # TODO: Tweak the hyperparameters to train the transformer encoder.
@@ -149,6 +194,25 @@ part4_q1 = r"""
 """
 
 part4_q2 = r"""
+**Your answer:**
+
+
+"""
+
+
+part4_q3= r"""
+**Your answer:**
+
+
+"""
+
+part4_q4 = r"""
+**Your answer:**
+
+
+"""
+
+part4_q5 = r"""
 **Your answer:**
 
 

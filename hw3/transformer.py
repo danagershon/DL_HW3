@@ -84,7 +84,7 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
         #attention[padding_mask_2 == 0] = 0
         #attention[padding_mask_3 == 0] = 0
 
-    print(attention)
+    #print(attention)
     values = attention @ v
     # ========================
 

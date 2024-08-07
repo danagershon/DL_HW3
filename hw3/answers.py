@@ -157,13 +157,13 @@ PART3_CUSTOM_DATA_URL = None
 
 def part3_transformer_encoder_hyperparams():
     hypers = dict(
-        embed_dim = 0, 
-        num_heads = 0,
-        num_layers = 0,
-        hidden_dim = 0,
-        window_size = 0,
-        droupout = 0.0,
-        lr=0.0,
+        embed_dim = 128, 
+        num_heads = 8,
+        num_layers = 5,
+        hidden_dim = 25,
+        window_size = 4,
+        dropout = 0.4,
+        lr=0.03,
     )
 
     # TODO: Tweak the hyperparameters to train the transformer encoder.
