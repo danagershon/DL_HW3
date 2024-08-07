@@ -38,16 +38,16 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
     ## and then use these indices to compute the dot products directly.
     # ====== YOUR CODE: ======
     b = torch.zeros([batch_size, seq_len, seq_len]) #batch_size, 
-    print(q.size(), k.size())
-    diag = torch.arange(seq_len)
+    #print(q.size(), k.size())
+    
+    #2d tensor containing the indexes to calculate dot prod on, i.e [0,0],[1,1], [2,1], [1,2]]
+    masked_ind = torch.tensor([], dtype=int)
     for i in range(window_size//2 + 1):
-        masked_ind = [torch.cat([diag[i:], diag[: seq_len - i]]), torch.cat([diag[: seq_len - i], diag[i:]])]
-        #On these indices, do b = (q @ mask @ k.transpose(1,-1))
-        masked_ind = torch.eye(2, dtype=int)
-        masked_ind = torch.tensor([[0,0],[1,1], [2,1], [1,2]])
-        print(q[:, masked_ind[:,0], :].size())
-        print(k[:, masked_ind[:,1], :].size())
-        b[:, masked_ind[:,0], masked_ind[:,1]] = (q[:, masked_ind[:,0], :] * k[:, masked_ind[:,1], :]).sum(dim=2)
+        masked_ind = torch.cat([masked_ind, torch.stack([torch.arange(i, seq_len), torch.arange(0, seq_len-i)], dim=1)])
+        masked_ind = torch.cat([masked_ind, torch.stack([torch.arange(0, seq_len-i), torch.arange(i, seq_len)], dim=1)])
+        
+    #On these indices, do b = (q @ mask @ k.transpose(1,-1))
+    b[:, masked_ind[:,0], masked_ind[:,1]] = (q[:, masked_ind[:,0], :] * k[:, masked_ind[:,1], :]).sum(dim=2)
     print(b)
     b = b / math.sqrt(embed_dim)
     attention = torch.softmax(b, dim=1)
