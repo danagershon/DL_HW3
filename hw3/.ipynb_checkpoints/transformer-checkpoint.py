@@ -21,7 +21,10 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
     assert window_size%2 == 0, "window size must be an even number"
     seq_len = q.shape[-2]
     embed_dim = q.shape[-1]
-    batch_size = q.shape[0] 
+    batch_size = q.shape[0]
+    num_heads = None
+    if(len(q.shape) == 4):
+        num_heads = q.shape[-3]
 
     values, attention = None, None
 
@@ -37,7 +40,13 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
     ## Think how you can obtain the indices corresponding to the entries in the sliding windows using tensor operations (without loops),
     ## and then use these indices to compute the dot products directly.
     # ====== YOUR CODE: ======
-    b = torch.ones([batch_size, seq_len, seq_len]) * (-float('inf'))#batch_size, 
+    #TODO LEFT WHAT TO DO WITH PADDINGMASK
+    dims = [batch_size]
+
+    if(num_heads != None):
+        dims += [num_heads]
+    
+    b = torch.ones([*dims, seq_len, seq_len]) * (-float('inf'))#batch_size, 
     
     #2d tensor containing the indexes to calculate dot prod on, i.e [0,0],[1,1], [2,1], [1,2]]
     masked_ind = torch.tensor([], dtype=int)
@@ -46,13 +55,13 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
         masked_ind = torch.cat([masked_ind, torch.stack([torch.arange(0, seq_len-i), torch.arange(i, seq_len)], dim=1)])
     
     #On these indices, do b = (q @ k.transpose(1,-1))
-    b[:, masked_ind[:,0], masked_ind[:,1]] = (q[:, masked_ind[:,0], :] * k[:, masked_ind[:,1], :]).sum(dim=2)
+    b[..., masked_ind[:,0], masked_ind[:,1]] = (q[..., masked_ind[:,0], :] * k[..., masked_ind[:,1], :]).sum(dim=-1)
     print("windowed b", b)
     #print("original b", (q @ k.transpose(1,-1)))
     #print("original attention",  torch.softmax((q @ k.transpose(1,-1)) / math.sqrt(embed_dim), dim=1) @ v)
     
     b = b / math.sqrt(embed_dim)
-    attention = torch.softmax(b, dim=2)
+    attention = torch.softmax(b, dim=-1)
     values = attention @ v
     # ========================
 
