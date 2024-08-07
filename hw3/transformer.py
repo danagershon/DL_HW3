@@ -69,14 +69,25 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
         
         padding_mask = padding_mask.unsqueeze(1)
         padding_mask_2 = padding_mask.unsqueeze(1)
-        padding_mask_2 = padding_mask_2.repeat(*dims_to_rep, seq_len, 1)
+        padding_mask_2 = padding_mask_2.repeat(*dims_to_rep, seq_len, 1)  #Now padding_mask_2 = [B, 1, 1, S]
         b[padding_mask_2 == 0] = -float('inf')
         padding_mask_2 = padding_mask.unsqueeze(-1)
-        padding_mask_2 = padding_mask_2.repeat(*dims_to_rep, 1, seq_len)
+        padding_mask_2 = padding_mask_2.repeat(*dims_to_rep, 1, seq_len)  #Now padding_mask_2 = [B, 1, S, 1]
         b[padding_mask_2 == 0] = -float('inf')
-    
+
     #Calculate Attention
     attention = torch.softmax(b, dim=-1)
+
+    #Fix padded softmax (that are all -inf)
+    if padding_mask != None:
+        padding_mask_2 = padding_mask.unsqueeze(1)
+        padding_mask_2 = padding_mask_2.repeat(*dims_to_rep, seq_len, 1)
+        attention[padding_mask_2 == 0] = 0
+        padding_mask_2 = padding_mask.unsqueeze(-1)
+        padding_mask_2 = padding_mask_2.repeat(*dims_to_rep, 1, seq_len)
+        attention[padding_mask_2 == 0] = 0
+
+    #print(attention)
     values = attention @ v
     # ========================
 
