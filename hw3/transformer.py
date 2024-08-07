@@ -40,7 +40,6 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
     ## Think how you can obtain the indices corresponding to the entries in the sliding windows using tensor operations (without loops),
     ## and then use these indices to compute the dot products directly.
     # ====== YOUR CODE: ======
-    #TODO LEFT WHAT TO DO WITH PADDINGMASK
     dims = [batch_size]
 
     if(num_heads != None):
@@ -61,8 +60,22 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
     #print("original attention",  torch.softmax((q @ k.transpose(1,-1)) / math.sqrt(embed_dim), dim=1) @ v)
     
     b = b / math.sqrt(embed_dim)
+
+    #Padding Mask
     if padding_mask != None:
-        b = b.masked_fill(padding_mask == 0, -float('inf'))
+        dims_to_rep = [1,num_heads]
+        if num_heads == None:
+            dims_to_rep = [1]
+        
+        padding_mask = padding_mask.unsqueeze(1)
+        padding_mask_2 = padding_mask.unsqueeze(1)
+        padding_mask_2 = padding_mask_2.repeat(*dims_to_rep, seq_len, 1)
+        b[padding_mask_2 == 0] = -float('inf')
+        padding_mask_2 = padding_mask.unsqueeze(-1)
+        padding_mask_2 = padding_mask_2.repeat(*dims_to_rep, 1, seq_len)
+        b[padding_mask_2 == 0] = -float('inf')
+    
+    #Calculate Attention
     attention = torch.softmax(b, dim=-1)
     values = attention @ v
     # ========================

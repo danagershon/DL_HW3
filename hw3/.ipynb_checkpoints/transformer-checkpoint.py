@@ -40,7 +40,6 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
     ## Think how you can obtain the indices corresponding to the entries in the sliding windows using tensor operations (without loops),
     ## and then use these indices to compute the dot products directly.
     # ====== YOUR CODE: ======
-    #TODO LEFT WHAT TO DO WITH PADDINGMASK
     dims = [batch_size]
 
     if(num_heads != None):
@@ -56,11 +55,27 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
     
     #On these indices, do b = (q @ k.transpose(1,-1))
     b[..., masked_ind[:,0], masked_ind[:,1]] = (q[..., masked_ind[:,0], :] * k[..., masked_ind[:,1], :]).sum(dim=-1)
-    print("windowed b", b)
+    #print("windowed b", b)
     #print("original b", (q @ k.transpose(1,-1)))
     #print("original attention",  torch.softmax((q @ k.transpose(1,-1)) / math.sqrt(embed_dim), dim=1) @ v)
     
     b = b / math.sqrt(embed_dim)
+
+    #Padding Mask
+    if padding_mask != None:
+        dims_to_rep = [1,num_heads]
+        if num_heads == None:
+            dims_to_rep = [1]
+        
+        padding_mask = padding_mask.unsqueeze(1)
+        padding_mask_2 = padding_mask.unsqueeze(1)
+        padding_mask_2 = padding_mask_2.repeat(*dims_to_rep, seq_len, 1)
+        b[padding_mask_2 == 0] = -float('inf')
+        padding_mask_2 = padding_mask.unsqueeze(-1)
+        padding_mask_2 = padding_mask_2.repeat(*dims_to_rep, 1, seq_len)
+        b[padding_mask_2 == 0] = -float('inf')
+    
+    #Calculate Attention
     attention = torch.softmax(b, dim=-1)
     values = attention @ v
     # ========================
@@ -109,7 +124,7 @@ class MultiHeadAttention(nn.Module):
         # TODO:
         # call the sliding window attention function you implemented
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        values, attention = sliding_window_attention(q, k, v, self.window_size, padding_mask = padding_mask)
         # ========================
 
         values = values.permute(0, 2, 1, 3) # [Batch, SeqLen, Head, Dims]
@@ -191,7 +206,15 @@ class EncoderLayer(nn.Module):
         #   3) Apply a feed-forward layer to the output of step 2, and then apply dropout again.
         #   4) Add a second residual connection and normalize again.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        y = self.self_attn(x, padding_mask)
+        z = self.dropout(y)
+        
+        z = self.norm1(x + y)
+        w = self.feed_forward(z)
+        w = self.dropout(w)
+
+        x = self.norm2(w + z)
+        
         # ========================
         
         return x

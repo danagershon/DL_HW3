@@ -93,9 +93,28 @@ class Trainer(abc.ABC):
             #  - Implement early stopping. This is a very useful and
             #    simple regularization technique that is highly recommended.
             # ====== YOUR CODE: ======
+            train_result = self.train_epoch(dl_train, verbose=verbose, **kw)
+            test_result = self.test_epoch(dl_test, verbose=verbose, **kw)
             
-            raise NotImplementedError()
+            #Save losses and accurcies
+            train_loss.extend(train_result.losses)  # TODO LEFT: see if we can use mean loss instead
+            train_acc.append(train_result.accuracy)
+            test_loss.extend(test_result.losses)
+            test_acc.append(test_result.accuracy)
 
+            if best_acc is None or test_result.accuracy > best_acc:
+                best_acc = test_result.accuracy
+                epochs_without_improvement = 0
+
+                if checkpoints is not None:  #TODO LEFT: see if this is needed
+                    save_checkpoint = True
+            else:
+                epochs_without_improvement += 1
+
+            if early_stopping and epochs_without_improvement >= early_stopping:
+                break
+
+            actual_num_epochs += 1
             # ========================
 
             # Save model checkpoint if requested
@@ -223,16 +242,14 @@ class RNNTrainer(Trainer):
     def train_epoch(self, dl_train: DataLoader, **kw):
         # TODO: Implement modifications to the base method, if needed.
         # ====== YOUR CODE: ======
-        
-        self.hidden_state = None    
-            
+        self.hidden_state = None    # no modification needed
         # ========================
         return super().train_epoch(dl_train, **kw)
 
     def test_epoch(self, dl_test: DataLoader, **kw):
         # TODO: Implement modifications to the base method, if needed.
         # ====== YOUR CODE: ======
-        self.hidden_state = None   
+        self.hidden_state = None   # no modification needed
         # ========================
         return super().test_epoch(dl_test, **kw)
 
@@ -250,7 +267,17 @@ class RNNTrainer(Trainer):
         #  - Update params
         #  - Calculate number of correct char predictions
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        self.optimizer.zero_grad()
+        # forward pass
+        output, self.hidden_state = self.model(x, self.hidden_state)
+        # don't compute gradients for hidden states
+        self.hidden_state = self.hidden_state.detach()
+        output = torch.transpose(output, 1, 2)
+        loss = self.loss_fn(output, y)
+        loss.backward()
+        self.optimizer.step()
+        y_pred = torch.argmax(output, dim=1)
+        num_correct = (y == y_pred).sum()
         # ========================
 
         # Note: scaling num_correct by seq_len because each sample has seq_len
@@ -270,7 +297,12 @@ class RNNTrainer(Trainer):
             #  - Loss calculation
             #  - Calculate number of correct predictions
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            # forward pass
+            output, self.hidden_state = self.model(x, self.hidden_state)
+            output = torch.transpose(output, 1, 2)
+            loss = self.loss_fn(output, y)
+            y_pred = torch.argmax(output, dim=1)
+            num_correct = (y == y_pred).sum()
             # ========================
 
         return BatchResult(loss.item(), num_correct.item() / seq_len)
@@ -313,7 +345,14 @@ class TransformerEncoderTrainer(Trainer):
         # TODO:
         #  fill out the training loop.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        self.optimizer.zero_grad()
+        # forward pass
+        output= self.model(x, padding_mask=attention_mask) #TODO LEFT what is input_ids?
+        loss = self.loss_fn(output, label)
+        loss.backward()
+        self.optimizer.step()
+        y_pred = torch.argmax(output, dim=1)
+        num_correct = (label == y_pred).sum()
         # ========================
         
         
