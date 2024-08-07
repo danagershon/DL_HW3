@@ -45,15 +45,15 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
     if(num_heads != None):
         dims += [num_heads]
     
-    b = torch.ones([*dims, seq_len, seq_len]) * (-float('inf'))#batch_size, 
+    b = torch.ones([*dims, seq_len, seq_len]) * (-float('inf')) 
     
     #2d tensor containing the indexes to calculate dot prod on, i.e [0,0],[1,1], [2,1], [1,2]]
     masked_ind = torch.tensor([], dtype=int)
-    for i in range(window_size//2 + 1):
+    for i in range(window_size//2 + 1): #TODO LEFT is this allowed? it is O(window_size)
         masked_ind = torch.cat([masked_ind, torch.stack([torch.arange(i, seq_len), torch.arange(0, seq_len-i)], dim=1)])
         masked_ind = torch.cat([masked_ind, torch.stack([torch.arange(0, seq_len-i), torch.arange(i, seq_len)], dim=1)])
     
-    #On these indices, do b = (q @ k.transpose(1,-1))
+    #On these indices, do b = (q @ k.transpose(1,-1)) = q.dot(k) on every i,j in masked_ind
     b[..., masked_ind[:,0], masked_ind[:,1]] = (q[..., masked_ind[:,0], :] * k[..., masked_ind[:,1], :]).sum(dim=-1)
     #print("windowed b", b)
     #print("original b", (q @ k.transpose(1,-1)))
@@ -63,22 +63,18 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
 
     #Padding Mask - for b
     if padding_mask != None:
-        dims_to_rep = [1,num_heads]
-        if num_heads == None:
-            dims_to_rep = [1]
-        
         padding_mask = padding_mask.unsqueeze(1) #Now padding_mask = [B, 1, S]
         padding_mask_2 = padding_mask.unsqueeze(1)
-        padding_mask_2 = padding_mask_2.repeat(*dims_to_rep, seq_len, 1)  #Now padding_mask_2 = [B, 1, 1, S]
+        padding_mask_2 = padding_mask_2.repeat(*dims, seq_len, 1)  #Now padding_mask_2 = [B, 1, 1, S]
         b[padding_mask_2 == 0] = -float('inf')
         padding_mask_3 = padding_mask.unsqueeze(-1)
-        padding_mask_3 = padding_mask_3.repeat(*dims_to_rep, 1, seq_len)  #Now padding_mask_3 = [B, 1, S, 1]
+        padding_mask_3 = padding_mask_3.repeat(*dims, 1, seq_len)  #Now padding_mask_3 = [B, 1, S, 1]
         b[padding_mask_3 == 0] = -float('inf')
 
     #Calculate Attention
     attention = torch.softmax(b, dim=-1)
 
-    #Fix padded softmax - for attention (otherwise we have nan where in the mask)
+    #Fix padded softmax - for attention (otherwise we have nan in the tokens in the mask)
     if padding_mask != None:
         attention = torch.nan_to_num(attention, 0)
         #attention[padding_mask_2 == 0] = 0

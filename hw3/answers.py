@@ -163,7 +163,7 @@ def part3_transformer_encoder_hyperparams():
         hidden_dim = 25,
         window_size = 4,
         dropout = 0.4,
-        lr=0.03,
+        lr=0.003,
     )
 
     # TODO: Tweak the hyperparameters to train the transformer encoder.
