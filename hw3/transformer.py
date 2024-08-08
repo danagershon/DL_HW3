@@ -62,7 +62,7 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
     b = b / math.sqrt(embed_dim)
 
     #Padding Mask - for b
-    if padding_mask != None:
+    if padding_mask != None: #TODO LEFT This part might be incorrect
         dims_rep = [1]
         if num_heads != None:
             dims_rep += [num_heads]

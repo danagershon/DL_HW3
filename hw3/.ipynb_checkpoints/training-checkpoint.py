@@ -389,13 +389,21 @@ class FineTuningTrainer(Trainer):
     def train_batch(self, batch) -> BatchResult:
         
         input_ids = batch["input_ids"].to(self.device)
-        attention_masks = batch["attention_mask"]
-        labels= batch["label"]
+        attention_mask = batch["attention_mask"]
+        label= batch["label"]
         # TODO:
         #  fill out the training loop.
         # ====== YOUR CODE: ======
 
-        raise NotImplementedError()
+        self.optimizer.zero_grad()
+        # forward pass
+        output = self.model(input_ids, attention_mask=attention_mask).logits.squeeze(0)
+        print(output, label)
+        loss = self.loss_fn(output, label)
+        loss.backward()
+        self.optimizer.step()
+        y_pred = torch.argmax(output)
+        num_correct = (label == y_pred).sum()
         
         # ========================
         
@@ -404,13 +412,16 @@ class FineTuningTrainer(Trainer):
     def test_batch(self, batch) -> BatchResult:
         
         input_ids = batch["input_ids"].to(self.device)
-        attention_masks = batch["attention_mask"]
-        labels= batch["label"]
+        attention_mask = batch["attention_mask"]
+        label= batch["label"]
         
         with torch.no_grad():
             # TODO:
             #  fill out the training loop.
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            output = self.model(input_ids, attention_mask=attention_mask).logits.squeeze(0)
+            loss = self.loss_fn(output, label)
+            y_pred = torch.argmax(output)
+            num_correct = (label == y_pred).sum()
             # ========================
         return BatchResult(loss, num_correct)
