@@ -63,12 +63,16 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
 
     #Padding Mask - for b
     if padding_mask != None:
+        dims_rep = [1]
+        if num_heads != None:
+            dims_rep += [num_heads]
+        
         padding_mask = padding_mask.unsqueeze(1) #Now padding_mask = [B, 1, S]
-        padding_mask_2 = padding_mask.unsqueeze(1)
-        padding_mask_2 = padding_mask_2.repeat(*dims, seq_len, 1)  #Now padding_mask_2 = [B, 1, 1, S]
+        padding_mask_2 = padding_mask.unsqueeze(1) #Now padding_mask_2 = [B, 1, 1, S]
+        padding_mask_2 = padding_mask_2.repeat(*dims_rep, seq_len, 1)
         b[padding_mask_2 == 0] = -float('inf')
-        padding_mask_3 = padding_mask.unsqueeze(-1)
-        padding_mask_3 = padding_mask_3.repeat(*dims, 1, seq_len)  #Now padding_mask_3 = [B, 1, S, 1]
+        padding_mask_3 = padding_mask.unsqueeze(-1) #Now padding_mask_3 = [B, 1, S, 1]
+        padding_mask_3 = padding_mask_3.repeat(*dims_rep, 1, seq_len)
         b[padding_mask_3 == 0] = -float('inf')
 
     #Calculate Attention
