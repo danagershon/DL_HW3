@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[3]:
 
 
 import numpy as np
@@ -26,7 +26,7 @@ import pickle
 #get_ipython().run_line_magic('autoreload', '2')
 
 
-# In[2]:
+# In[4]:
 
 
 from torch.utils.data import DataLoader, Dataset
@@ -82,26 +82,26 @@ from cs236781.train_results import FitResult
 # Here we will load the full training and test set.
 # 
 
-# In[3]:
+# In[5]:
 
 
 dataset = load_dataset('imdb', split=['train', 'test[12260:12740]'])
 
 
-# In[4]:
+# In[6]:
 
 
 print(dataset)
 
 
-# In[5]:
+# In[7]:
 
 
 #wrap it in a DatasetDict to enable methods such as map and format
 dataset = DatasetDict({'train': dataset[0], 'test': dataset[1]})
 
 
-# In[6]:
+# In[8]:
 
 
 dataset
@@ -110,7 +110,7 @@ dataset
 # We can now access the datasets in the Dict as we would a dictionary.
 # Let's print a few training samples
 
-# In[7]:
+# In[9]:
 
 
 for i in range(4):
@@ -123,7 +123,7 @@ for i in range(4):
 
 # We should also check the label distribution:
 
-# In[8]:
+# In[10]:
 
 
 def label_cnt(type):
@@ -146,7 +146,7 @@ label_cnt('test')
 # 
 # 
 
-# In[9]:
+# In[11]:
 
 
 from transformers import AutoTokenizer
@@ -156,7 +156,7 @@ print("Tokenizer input max length:", tokenizer.model_max_length)
 print("Tokenizer vocabulary size:", tokenizer.vocab_size)
 
 
-# In[10]:
+# In[12]:
 
 
 def tokenize_text(batch):
@@ -179,7 +179,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 # By now, you are familiar with the Class methods that are needed to create a working Dataloader.
 # 
 
-# In[11]:
+# In[13]:
 
 
 class IMDBDataset(Dataset):
@@ -193,14 +193,14 @@ class IMDBDataset(Dataset):
         return self.ds.num_rows
 
 
-# In[12]:
+# In[14]:
 
 
 train_dataset = IMDBDataset(dataset_tokenized['train'])
 test_dataset = IMDBDataset(dataset_tokenized['test'])
 
 
-# In[13]:
+# In[15]:
 
 
 n_workers= 0
@@ -220,7 +220,7 @@ DataLoader(
 )]
 
 
-# In[14]:
+# In[16]:
 
 
 dl_train
@@ -237,13 +237,13 @@ dl_train
 # To begin, we will import the necessary library required for our implementation.
 # It is fine if you receive a warning from `Hugging Face` to train the model on a downstream task, which is exactly what we will do on our IMDB dataset. 
 
-# In[15]:
+# In[17]:
 
 
 from transformers import AutoModelForSequenceClassification
 
 
-# In[16]:
+# In[18]:
 
 
 model = AutoModelForSequenceClassification.from_pretrained(
@@ -252,7 +252,7 @@ model = AutoModelForSequenceClassification.from_pretrained(
 
 # __Let's print the model architecture to see what we are dealing with:__
 
-# In[17]:
+# In[19]:
 
 
 model
@@ -274,17 +274,18 @@ model
 # 
 # 
 
-# In[18]:
+# In[20]:
 
 
 # TODO:
 # Freeze all parameters except for the last 2 linear layers
 # ====== YOUR CODE: ======
-model.distilbert.embeddings.requires_grad = False
-model.distilbert.transformer.requires_grad = False #Freeze Transformer Block
+for param in model.parameters():
+    param.requires_grad = False
 
-#Replace Classifier to output size 2:
-model.classifier = torch.nn.Linear(in_features=768, out_features=1, bias=True)
+#Replace Classifier to output size 1:
+model.pre_classifier.requires_grad = True
+model.classifier.requires_grad = True
 # ========================
 
 # HINT: use the printed model architecture to get the layer names
@@ -357,12 +358,13 @@ model = AutoModelForSequenceClassification.from_pretrained(
 model
 
 
-# In[ ]:
+# In[20]:
 
 
 # TODO: Make sure all the model parameters are unfrozen
 # ====== YOUR CODE: ======
-    
+for param in model.parameters():
+    param.requires_grad = True
 # ========================
 
 

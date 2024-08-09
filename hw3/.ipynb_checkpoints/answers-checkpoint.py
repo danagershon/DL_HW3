@@ -157,12 +157,12 @@ PART3_CUSTOM_DATA_URL = None
 
 def part3_transformer_encoder_hyperparams():
     hypers = dict(
-        embed_dim = 144, 
-        num_heads = 12,
+        embed_dim = 128, 
+        num_heads = 4,
         num_layers = 6,
         hidden_dim = 32,
         window_size = 16,
-        dropout = 0.5,
+        dropout = 0.2,
         lr=0.0001,
     )
 

@@ -396,14 +396,13 @@ class FineTuningTrainer(Trainer):
 
         #Convert labels to float:
         label = label.to(torch.float32)
-        
+
         self.optimizer.zero_grad()
-        # forward pass
-        output = self.model.forward(input_ids, attention_mask=attention_mask).logits.squeeze(1)
-        loss = self.loss_fn(output, label)
+        logits = self.model.forward(input_ids, attention_mask=attention_mask).logits.squeeze(-1)
+        loss = self.loss_fn(logits, label)
         loss.backward()
         self.optimizer.step()
-        y_pred = torch.argmax(output)
+        y_pred = torch.round(torch.sigmoid(logits))
         num_correct = (label == y_pred).sum()
         
         # ========================
@@ -421,10 +420,9 @@ class FineTuningTrainer(Trainer):
             #  fill out the training loop.
             # ====== YOUR CODE: ======
             label = label.to(torch.float32)
-            output = self.model.forward(input_ids, attention_mask=attention_mask).logits.squeeze(1)
-            #output = torch.round(torch.sigmoid(output)) #Calculate accuracy?
-            loss = self.loss_fn(output, label)
-            y_pred = torch.argmax(output)
+            logits = self.model.forward(input_ids, attention_mask=attention_mask).logits.squeeze(-1)
+            loss = self.loss_fn(logits, label)
+            y_pred = torch.round(torch.sigmoid(logits))
             num_correct = (label == y_pred).sum()
             # ========================
         return BatchResult(loss, num_correct)
