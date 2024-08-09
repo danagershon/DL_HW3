@@ -97,9 +97,9 @@ class Trainer(abc.ABC):
             test_result = self.test_epoch(dl_test, verbose=verbose, **kw)
             
             #Save losses and accurcies
-            train_loss.append(sum(train_result.losses) / len(train_result.losses))
+            train_loss.extend(train_result.losses)  # TODO LEFT: see if we can use mean loss instead
             train_acc.append(train_result.accuracy)
-            test_loss.append(sum(test_result.losses) / len(test_result.losses))
+            test_loss.extend(test_result.losses)
             test_acc.append(test_result.accuracy)
 
             if best_acc is None or test_result.accuracy > best_acc:
@@ -348,12 +348,12 @@ class TransformerEncoderTrainer(Trainer):
         self.optimizer.zero_grad()
         # forward pass
         output= self.model.predict(input_ids, padding_mask=attention_mask).squeeze(1)
+        #print(output, label)
         #print(output.shape, label.shape)
         loss = self.loss_fn(output, label)
         loss.backward()
         self.optimizer.step()
-        y_pred = torch.argmax(output)
-        num_correct = (label == y_pred).sum()
+        num_correct = (label == output).sum()
         # ========================
         
         
@@ -374,8 +374,7 @@ class TransformerEncoderTrainer(Trainer):
             # ====== YOUR CODE: ======
             output = self.model.predict(input_ids, attention_mask).squeeze(1)
             loss = self.loss_fn(output, label)
-            y_pred = torch.argmax(output)
-            num_correct = (label == y_pred).sum()
+            num_correct = (label == output).sum()
             # ========================
 
             
@@ -400,7 +399,7 @@ class FineTuningTrainer(Trainer):
         
         self.optimizer.zero_grad()
         # forward pass
-        output = self.model(input_ids, attention_mask=attention_mask).logits.squeeze(1)
+        output = self.model.forward(input_ids, attention_mask=attention_mask).logits.squeeze(1)
         loss = self.loss_fn(output, label)
         loss.backward()
         self.optimizer.step()
@@ -422,7 +421,8 @@ class FineTuningTrainer(Trainer):
             #  fill out the training loop.
             # ====== YOUR CODE: ======
             label = label.to(torch.float32)
-            output = self.model(input_ids, attention_mask=attention_mask).logits.squeeze(1)
+            output = self.model.forward(input_ids, attention_mask=attention_mask).logits.squeeze(1)
+            #output = torch.round(torch.sigmoid(output)) #Calculate accuracy?
             loss = self.loss_fn(output, label)
             y_pred = torch.argmax(output)
             num_correct = (label == y_pred).sum()

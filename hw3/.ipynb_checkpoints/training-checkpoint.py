@@ -348,12 +348,12 @@ class TransformerEncoderTrainer(Trainer):
         self.optimizer.zero_grad()
         # forward pass
         output= self.model.predict(input_ids, padding_mask=attention_mask).squeeze(1)
+        #print(output, label)
         #print(output.shape, label.shape)
         loss = self.loss_fn(output, label)
         loss.backward()
         self.optimizer.step()
-        y_pred = torch.argmax(output)
-        num_correct = (label == y_pred).sum()
+        num_correct = (label == output).sum()
         # ========================
         
         
@@ -374,8 +374,7 @@ class TransformerEncoderTrainer(Trainer):
             # ====== YOUR CODE: ======
             output = self.model.predict(input_ids, attention_mask).squeeze(1)
             loss = self.loss_fn(output, label)
-            y_pred = torch.argmax(output)
-            num_correct = (label == y_pred).sum()
+            num_correct = (label == output).sum()
             # ========================
 
             
@@ -400,7 +399,7 @@ class FineTuningTrainer(Trainer):
         
         self.optimizer.zero_grad()
         # forward pass
-        output = self.model(input_ids, attention_mask=attention_mask).logits.squeeze(1)
+        output = self.model.forward(input_ids, attention_mask=attention_mask).logits.squeeze(1)
         loss = self.loss_fn(output, label)
         loss.backward()
         self.optimizer.step()
@@ -422,7 +421,8 @@ class FineTuningTrainer(Trainer):
             #  fill out the training loop.
             # ====== YOUR CODE: ======
             label = label.to(torch.float32)
-            output = self.model(input_ids, attention_mask=attention_mask).logits.squeeze(1)
+            output = self.model.forward(input_ids, attention_mask=attention_mask).logits.squeeze(1)
+            #output = torch.round(torch.sigmoid(output)) #Calculate accuracy?
             loss = self.loss_fn(output, label)
             y_pred = torch.argmax(output)
             num_correct = (label == y_pred).sum()
