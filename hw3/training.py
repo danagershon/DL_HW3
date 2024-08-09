@@ -389,20 +389,21 @@ class FineTuningTrainer(Trainer):
         
         input_ids = batch["input_ids"].to(self.device)
         attention_mask = batch["attention_mask"]
-        label= batch["label"]
+        labels = batch["label"]
         # TODO:
         #  fill out the training loop.
         # ====== YOUR CODE: ======
 
         #Convert labels to float:
-        label = label.to(torch.float32)
+        #labels = labels.to(torch.float32)
 
         self.optimizer.zero_grad()
-        logits = self.model.forward(input_ids, attention_mask=attention_mask).logits.squeeze(-1)
-        loss = self.loss_fn(logits, label)
+        model_out = self.model(input_ids, labels=labels, attention_mask=attention_mask)
+        logits = model_out.logits.squeeze(-1)
+        loss = model_out.loss
         loss.backward()
         self.optimizer.step()
-        y_pred = torch.round(torch.sigmoid(logits))
+        y_pred = torch.argmax(logits, dim=-1)
         num_correct = (label == y_pred).sum()
         
         # ========================
@@ -413,16 +414,17 @@ class FineTuningTrainer(Trainer):
         
         input_ids = batch["input_ids"].to(self.device)
         attention_mask = batch["attention_mask"]
-        label= batch["label"]
+        labels = batch["label"]
         
         with torch.no_grad():
             # TODO:
             #  fill out the training loop.
             # ====== YOUR CODE: ======
-            label = label.to(torch.float32)
-            logits = self.model.forward(input_ids, attention_mask=attention_mask).logits.squeeze(-1)
-            loss = self.loss_fn(logits, label)
-            y_pred = torch.round(torch.sigmoid(logits))
+            #labels = labels.to(torch.float32)
+            model_out = self.model(input_ids, labels=labels, attention_mask=attention_mask)
+            logits = model_out.logits.squeeze(-1)
+            loss = model_out.loss
+            y_pred = torch.argmax(logits, dim=-1)
             num_correct = (label == y_pred).sum()
             # ========================
         return BatchResult(loss, num_correct)
