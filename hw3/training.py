@@ -347,7 +347,7 @@ class TransformerEncoderTrainer(Trainer):
         # ====== YOUR CODE: ======
         self.optimizer.zero_grad()
         # forward pass
-        output= self.model(input_ids, padding_mask=attention_mask).squeeze(1)
+        output= self.model.predict(input_ids, padding_mask=attention_mask).squeeze(1)
         #print(output.shape, label.shape)
         loss = self.loss_fn(output, label)
         loss.backward()
@@ -372,7 +372,7 @@ class TransformerEncoderTrainer(Trainer):
             # TODO:
             #  fill out the testing loop.
             # ====== YOUR CODE: ======
-            output = self.model(input_ids, attention_mask).squeeze(1)
+            output = self.model.predict(input_ids, attention_mask).squeeze(1)
             loss = self.loss_fn(output, label)
             y_pred = torch.argmax(output)
             num_correct = (label == y_pred).sum()

@@ -289,7 +289,7 @@ class Encoder(nn.Module):
     
     def predict(self, sentence, padding_mask):
         '''
-        :param sententence #[Batch, max_seq_len]
+        :param sentence #[Batch, max_seq_len]
         :param padding mask #[Batch, max_seq_len]
         :return: the binary predictions  [Batch]
         '''
