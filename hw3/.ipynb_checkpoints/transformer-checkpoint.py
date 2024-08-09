@@ -62,7 +62,7 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
     b = b / math.sqrt(embed_dim)
 
     #Padding Mask - for b
-    if padding_mask != None: #TODO LEFT This part might be incorrect
+    if padding_mask != None:
         dims_rep = [1]
         if num_heads != None:
             dims_rep += [num_heads]
@@ -214,13 +214,14 @@ class EncoderLayer(nn.Module):
         #   3) Apply a feed-forward layer to the output of step 2, and then apply dropout again.
         #   4) Add a second residual connection and normalize again.
         # ====== YOUR CODE: ======
-        y = self.self_attn(x, padding_mask)
-        z = self.dropout(y)
-        
-        z = self.norm1(x + y)
-        w = self.feed_forward(z)
-        w = self.dropout(w)
+        z = self.dropout(self.self_attn(x, padding_mask))
 
+        #Skip Connection
+        z = self.norm1(x + z)
+        
+        w = self.dropout(self.feed_forward(z))
+
+        #Skip Connection
         res = self.norm2(w + z)
         
         # ========================
@@ -279,7 +280,7 @@ class Encoder(nn.Module):
             z = encoder(z, padding_mask)
 
         #Extract the value of [CLS]
-        output = self.classification_mlp(z[:,0,:]) #TODO LEFT Is this how to get the CLS token value?
+        output = self.classification_mlp(z[:,0,:])
         
         # ========================
         
