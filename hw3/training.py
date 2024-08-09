@@ -97,9 +97,9 @@ class Trainer(abc.ABC):
             test_result = self.test_epoch(dl_test, verbose=verbose, **kw)
             
             #Save losses and accurcies
-            train_loss.extend(train_result.losses)  # TODO LEFT: see if we can use mean loss instead
+            train_loss.append(sum(train_result.losses) / len(train_result.losses))
             train_acc.append(train_result.accuracy)
-            test_loss.extend(test_result.losses)
+            test_loss.append(sum(test_result.losses) / len(test_result.losses))
             test_acc.append(test_result.accuracy)
 
             if best_acc is None or test_result.accuracy > best_acc:

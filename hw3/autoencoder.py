@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class EncoderCNN(nn.Module):
+class EncoderCNN(nn.Module):  # TODO LEFT: write a test for this code? the notebook does not test it
     def __init__(self, in_channels, out_channels):
         super().__init__()
 
@@ -19,7 +19,12 @@ class EncoderCNN(nn.Module):
         #  use pooling or only strides, use any activation functions,
         #  use BN or Dropout, etc.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        channels = [in_channels, 64, 128, 256, out_channels]
+        for i in range(len(channels) - 1):
+            modules.append(nn.Conv2d(channels[i], channels[i + 1], kernel_size=4, stride=2, padding=1))
+            modules.append(nn.BatchNorm2d(channels[i + 1]))
+            modules.append(nn.ReLU())
+        self.cnn = nn.Sequential(*modules)
         # ========================
         self.cnn = nn.Sequential(*modules)
 
@@ -42,7 +47,7 @@ class DecoderCNN(nn.Module):
         #  output should be a batch of images, with same dimensions as the
         #  inputs to the Encoder were.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        # raise NotImplementedError()
         # ========================
         self.cnn = nn.Sequential(*modules)
 
@@ -70,7 +75,7 @@ class VAE(nn.Module):
 
         # TODO: Add more layers as needed for encode() and decode().
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        # raise NotImplementedError()
         # ========================
 
     def _check_features(self, in_size):
@@ -91,7 +96,7 @@ class VAE(nn.Module):
         #     log_sigma2 (mean and log variance) of q(Z|x).
         #  2. Apply the reparametrization trick to obtain z.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        # raise NotImplementedError()
         # ========================
 
         return z, mu, log_sigma2
@@ -102,7 +107,7 @@ class VAE(nn.Module):
         #  1. Convert latent z to features h with a linear layer.
         #  2. Apply features decoder.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        # raise NotImplementedError()
         # ========================
 
         # Scale to [-1, 1] (same dynamic range as original images).
@@ -121,7 +126,8 @@ class VAE(nn.Module):
             #    Instead of sampling from N(psi(z), sigma2 I), we'll just take
             #    the mean, i.e. psi(z).
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            pass
+            # raise NotImplementedError()
             # ========================
 
         # Detach and move to CPU for display purposes
@@ -154,7 +160,7 @@ def vae_loss(x, xr, z_mu, z_log_sigma2, x_sigma2):
     #  1. The covariance matrix of the posterior is diagonal.
     #  2. You need to average over the batch dimension.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    # raise NotImplementedError()
     # ========================
 
     return loss, data_loss, kldiv_loss
