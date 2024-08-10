@@ -45,7 +45,7 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
     if(num_heads != None):
         dims += [num_heads]
     
-    b = torch.ones([*dims, seq_len, seq_len]) * (-float('inf')) 
+    b = torch.ones([*dims, seq_len, seq_len]) * (-float('inf')).to(device)
     
     #2d tensor containing the indexes to calculate dot prod on, i.e [0,0],[1,1], [2,1], [1,2]]
     masked_ind = torch.tensor([], dtype=int)
