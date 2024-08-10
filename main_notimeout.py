@@ -195,7 +195,7 @@ def run_notebooks(nb_paths, allow_errors=False, **kwargs):
     for nb_path in nb_paths:
         try:
             jupyter_utils.nbconvert(
-                nb_path, execute=True, inplace=True, allow_errors=allow_errors, timeout=10000
+                nb_path, execute=True, inplace=True, allow_errors=allow_errors, timeout_sec=10000
             )
         except subprocess.CalledProcessError:
             error_msg = (
