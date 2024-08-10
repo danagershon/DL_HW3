@@ -347,7 +347,7 @@ class TransformerEncoderTrainer(Trainer):
         # ====== YOUR CODE: ======
         self.optimizer.zero_grad()
         # forward pass
-        logits = self.model.forward(input_ids, padding_mask=attention_mask).squeeze(-1)
+        logits = self.model(input_ids, padding_mask=attention_mask).to(self.device).squeeze(-1)
         loss = self.loss_fn(logits, label)
         loss.backward()
         self.optimizer.step()
@@ -371,7 +371,7 @@ class TransformerEncoderTrainer(Trainer):
             # TODO:
             #  fill out the testing loop.
             # ====== YOUR CODE: ======
-            logits = self.model.forward(input_ids, padding_mask=attention_mask).squeeze(-1)
+            logits = self.model(input_ids, padding_mask=attention_mask).to(self.device).squeeze(-1)
             loss = self.loss_fn(logits, label)
             y_pred = torch.round(torch.sigmoid(logits))
             num_correct = (label == y_pred).sum()

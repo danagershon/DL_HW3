@@ -214,6 +214,7 @@ class EncoderLayer(nn.Module):
         #   3) Apply a feed-forward layer to the output of step 2, and then apply dropout again.
         #   4) Add a second residual connection and normalize again.
         # ====== YOUR CODE: ======
+        padding_mask = padding_mask.to(x.device)
         z = self.dropout(self.self_attn(x, padding_mask))
 
         #Skip Connection
