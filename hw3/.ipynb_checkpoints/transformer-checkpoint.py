@@ -48,7 +48,7 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
     b = torch.ones([*dims, seq_len, seq_len]).to(q.device) * (-float('inf'))
     
     #2d tensor containing the indexes to calculate dot prod on, i.e [0,0],[1,1], [2,1], [1,2]]
-    masked_ind = torch.tensor([], dtype=int)
+    masked_ind = torch.tensor([], dtype=int).to(q.device)
     for i in range(window_size//2 + 1): #TODO LEFT is this allowed? it is O(window_size)
         masked_ind = torch.cat([masked_ind, torch.stack([torch.arange(i, seq_len), torch.arange(0, seq_len-i)], dim=1)])
         masked_ind = torch.cat([masked_ind, torch.stack([torch.arange(0, seq_len-i), torch.arange(i, seq_len)], dim=1)])
