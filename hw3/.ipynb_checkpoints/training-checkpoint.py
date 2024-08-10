@@ -407,7 +407,7 @@ class FineTuningTrainer(Trainer):
         
         # ========================
         
-        return BatchResult(loss, num_correct)
+        return BatchResult(loss.item(), num_correct.item())
         
     def test_batch(self, batch) -> BatchResult:
         
@@ -426,4 +426,4 @@ class FineTuningTrainer(Trainer):
             y_pred = torch.argmax(logits, dim=-1)
             num_correct = (labels == y_pred).sum()
             # ========================
-        return BatchResult(loss, num_correct)
+        return BatchResult(loss.item(), num_correct.item())
