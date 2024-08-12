@@ -55,10 +55,6 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
     
     #On these indices, do b = (q @ k.transpose(1,-1)) = q.dot(k) on every i,j in masked_ind
     b[..., masked_ind[:,0], masked_ind[:,1]] = (q[..., masked_ind[:,0], :] * k[..., masked_ind[:,1], :]).sum(dim=-1)
-    #print("windowed b", b)
-    #print("original b", (q @ k.transpose(1,-1)))
-    #print("original attention",  torch.softmax((q @ k.transpose(1,-1)) / math.sqrt(embed_dim), dim=1) @ v)
-    
     b = b / math.sqrt(embed_dim)
 
     #Padding Mask - for b
@@ -81,10 +77,7 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
     #Fix padded softmax - for attention (otherwise we have nan in the tokens in the mask)
     if padding_mask != None:
         attention = torch.nan_to_num(attention, 0)
-        #attention[padding_mask_2 == 0] = 0
-        #attention[padding_mask_3 == 0] = 0
 
-    #print(attention)
     values = attention @ v
     # ========================
 

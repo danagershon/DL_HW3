@@ -346,7 +346,6 @@ class TransformerEncoderTrainer(Trainer):
         #  fill out the training loop.
         # ====== YOUR CODE: ======
         self.optimizer.zero_grad()
-        # forward pass
         logits = self.model(input_ids, padding_mask=attention_mask).to(self.device).squeeze(-1)
         loss = self.loss_fn(logits, label)
         loss.backward()
@@ -393,17 +392,13 @@ class FineTuningTrainer(Trainer):
         # TODO:
         #  fill out the training loop.
         # ====== YOUR CODE: ======
-
-        #Convert labels to float:
-        #labels = labels.to(torch.float32)
         self.optimizer.zero_grad()
         model_out = self.model(input_ids, labels=labels, attention_mask=attention_mask)
-        logits = model_out.logits#.squeeze(-1)
+        logits = model_out.logits
         loss = model_out.loss
         loss.backward()
         self.optimizer.step()
         y_pred = torch.argmax(logits, dim=-1)
-        # y_pred = torch.argmax(torch.sigmoid(logits), dim=1)
         num_correct = (labels == y_pred).sum()
         
         # ========================
@@ -420,12 +415,10 @@ class FineTuningTrainer(Trainer):
             # TODO:
             #  fill out the training loop.
             # ====== YOUR CODE: ======
-            #labels = labels.to(torch.float32)
             model_out = self.model(input_ids, labels=labels, attention_mask=attention_mask)
-            logits = model_out.logits#.squeeze(-1)
+            logits = model_out.logits
             loss = model_out.loss
             y_pred = torch.argmax(logits, dim=-1)
-            # y_pred = torch.argmax(torch.sigmoid(logits), dim=1)
             num_correct = (labels == y_pred).sum()
             # ========================
         return BatchResult(loss.item(), num_correct.item())

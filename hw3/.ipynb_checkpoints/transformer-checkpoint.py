@@ -41,24 +41,20 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
     ## and then use these indices to compute the dot products directly.
     # ====== YOUR CODE: ======
     dims = [batch_size]
-
+    
     if(num_heads != None):
         dims += [num_heads]
     
-    b = torch.ones([*dims, seq_len, seq_len]).to(q.device) * (-float('inf'))
-    
+    b = torch.ones([*dims, seq_len, seq_len], device=q.device) * (-float('inf'))  
     #2d tensor containing the indexes to calculate dot prod on, i.e [0,0],[1,1], [2,1], [1,2]]
-    masked_ind = torch.tensor([], dtype=int).to(q.device)
+    masked_ind = torch.tensor([], dtype=int, device=q.device)
+
     for i in range(window_size//2 + 1): #TODO LEFT is this allowed? it is O(window_size)
-        masked_ind = torch.cat([masked_ind, torch.stack([torch.arange(i, seq_len), torch.arange(0, seq_len-i)], dim=1)])
-        masked_ind = torch.cat([masked_ind, torch.stack([torch.arange(0, seq_len-i), torch.arange(i, seq_len)], dim=1)])
+        masked_ind = torch.cat([masked_ind, torch.stack([torch.arange(i, seq_len, device=q.device), torch.arange(0, seq_len-i, device=q.device)], dim=1)])
+        masked_ind = torch.cat([masked_ind, torch.stack([torch.arange(0, seq_len-i, device=q.device), torch.arange(i, seq_len, device=q.device)], dim=1)])
     
     #On these indices, do b = (q @ k.transpose(1,-1)) = q.dot(k) on every i,j in masked_ind
     b[..., masked_ind[:,0], masked_ind[:,1]] = (q[..., masked_ind[:,0], :] * k[..., masked_ind[:,1], :]).sum(dim=-1)
-    #print("windowed b", b)
-    #print("original b", (q @ k.transpose(1,-1)))
-    #print("original attention",  torch.softmax((q @ k.transpose(1,-1)) / math.sqrt(embed_dim), dim=1) @ v)
-    
     b = b / math.sqrt(embed_dim)
 
     #Padding Mask - for b
@@ -81,10 +77,7 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
     #Fix padded softmax - for attention (otherwise we have nan in the tokens in the mask)
     if padding_mask != None:
         attention = torch.nan_to_num(attention, 0)
-        #attention[padding_mask_2 == 0] = 0
-        #attention[padding_mask_3 == 0] = 0
 
-    #print(attention)
     values = attention @ v
     # ========================
 

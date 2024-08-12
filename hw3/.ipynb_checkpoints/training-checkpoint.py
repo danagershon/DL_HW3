@@ -346,7 +346,6 @@ class TransformerEncoderTrainer(Trainer):
         #  fill out the training loop.
         # ====== YOUR CODE: ======
         self.optimizer.zero_grad()
-        # forward pass
         logits = self.model(input_ids, padding_mask=attention_mask).to(self.device).squeeze(-1)
         loss = self.loss_fn(logits, label)
         loss.backward()
@@ -388,17 +387,14 @@ class FineTuningTrainer(Trainer):
     def train_batch(self, batch) -> BatchResult:
         
         input_ids = batch["input_ids"].to(self.device)
-        attention_mask = batch["attention_mask"]
-        labels = batch["label"]
+        attention_mask = batch["attention_mask"].to(self.device)
+        labels = batch["label"].to(self.device)
         # TODO:
         #  fill out the training loop.
         # ====== YOUR CODE: ======
-
-        #Convert labels to float:
-        #labels = labels.to(torch.float32)
         self.optimizer.zero_grad()
         model_out = self.model(input_ids, labels=labels, attention_mask=attention_mask)
-        logits = model_out.logits#.squeeze(-1)
+        logits = model_out.logits
         loss = model_out.loss
         loss.backward()
         self.optimizer.step()
@@ -412,16 +408,15 @@ class FineTuningTrainer(Trainer):
     def test_batch(self, batch) -> BatchResult:
         
         input_ids = batch["input_ids"].to(self.device)
-        attention_mask = batch["attention_mask"]
-        labels = batch["label"]
+        attention_mask = batch["attention_mask"].to(self.device)
+        labels = batch["label"].to(self.device)
         
         with torch.no_grad():
             # TODO:
             #  fill out the training loop.
             # ====== YOUR CODE: ======
-            #labels = labels.to(torch.float32)
             model_out = self.model(input_ids, labels=labels, attention_mask=attention_mask)
-            logits = model_out.logits.squeeze(-1)
+            logits = model_out.logits
             loss = model_out.loss
             y_pred = torch.argmax(logits, dim=-1)
             num_correct = (labels == y_pred).sum()
