@@ -50,21 +50,53 @@ def part1_generation_params():
 part1_q1 = r"""
 **Your answer:**
 
+We split the corpus into sequences instead of training on the whole text for a few reasons:
+
+1. training on the whole text can be infeasible to store in memory for large datasets. 
+Breaking the text into smaller sequences makes it managable to store in memory.
+
+2. splitting to smaller sequences allows batch processing, where we process multiple sequences in parallel. 
+This speeds up training by having more frequent gradient updates which leads to faster model convergence.
+
+3. training on smaller sequences allows the model to capture local text context.
+
+4. splitting to smaller sequences mitigates the vanishing and exploding gradients problems.
+
 """
 
 part1_q2 = r"""
 **Your answer:**
+
+The generated text shows memory longer than the sequence length thanks to the hidden states,
+that carry information across sequences. This allows the model to remember information from previous sequences,
+thus it incorporates into the generated text context beyond the current sequence length.
 
 """
 
 part1_q3 = r"""
 **Your answer:**
 
+We do not shuffle the order of batches when training because we deal with sequential data, and we want to preserve 
+the temporal dependencies and contextual information it has.
+Shuffling can disrupt the inherent sequential structure, thus preventing the model from learning meaningful patterns.
+
 """
 
 part1_q4 = r"""
 **Your answer:**
 
+1. We lower the temperature for sampling to make the generated text less random.
+By lowering the temperature, we change the probability distribution of the next character such that
+the most likely characters (higher scores) are more probable. By that we reduce the chances of unlikely characters 
+to be chosen, making the genereted text more coherent.
+
+2. When the temperature is very high, the probability distribution of the next character becomes more uniform.
+This means characters have almost equal probability of being chosen next, regardless of their scores.
+The generated text becomes more randomized and less coherent, but a benefit is that the text can be more diverse.
+
+3. When the temperature is very low, the probability distribution of the next character becomes skewed towards the 
+most likely characters (higher scores), making them almost certain to be chosen. This increases the predictability of
+the generated text but reduces variance, making the model prone to repeat patterns.
 
 """
 # ==============
@@ -125,12 +157,31 @@ def part3_gan_hyperparams():
 part2_q1 = r"""
 **Your answer:**
 
+1. We maintain gradients when sampling from the GAN during the generator update.
+This is because in order for the generator to learn and improve, we need to update the generator's parameters, for which
+we need to compute the gradients of the generator's loss w.r.t to its parameters.
+
+2. We discard gradients when sampling from the GAN during the discriminator update.
+This is because we do not want to update the generator's parameters, thus we do not need to maintain the gradients 
+for the generator.
 
 """
 
 part2_q2 = r"""
 **Your answer:**
 
+1. We should not decide to stop training solely based on the fact that the Generator loss is below some threshold.
+This is because low generator loss only indicates that the generator is successful at fooling the discriminator, and
+it does not mean that the images the generator generates are realistic. 
+Another point to consider is that the generator loss can be low while the discriminator is high, indicating that 
+the discriminator is weak, and the generator is not being effectively challenged.
+
+2. If the discriminator loss remains at a constant value while the generator loss decreases, it theoretically 
+means that the discriminator is not improving while the generator is improving, but the underlying case might be different.
+If the generator outputs a limited variety of images that it found fools the discriminator, then the generator loss 
+can decrease while the discriminator loss remains the same, but effectively it can be that the generator image quality
+does not improve. Also, a constant discriminator loss can occur if the discriminator is strong initially, and the 
+images produced by the generator do not help the discriminator improve further.
 
 """
 
@@ -162,7 +213,7 @@ def part3_transformer_encoder_hyperparams():
         num_layers = 6,
         hidden_dim = 32,
         window_size = 16,
-        dropout = 0.2,
+        droupout = 0.2,
         lr=0.0001,
     )
 
