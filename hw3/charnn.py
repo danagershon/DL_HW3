@@ -283,7 +283,6 @@ class MultilayerGRU(nn.Module):
         for layer_idx in range(n_layers):
             input_dim = in_dim if layer_idx == 0 else h_dim
             layer_dict = {
-                # TODO LEFT: note that I decided to flip the bias values, check what is right
                 'wxz': nn.Linear(input_dim, h_dim, bias=False),
                 'whz': nn.Linear(h_dim, h_dim, bias=True),
                 'wxr': nn.Linear(input_dim, h_dim, bias=False),
@@ -333,9 +332,6 @@ class MultilayerGRU(nn.Module):
 
         # TODO: READ THIS SECTION!!
 
-        # TODO LEFT: this implementation was given by segel, might be accidently (but I also implemented my own version)
-        # I implemented __init__ to be compatible with it
-
         # ====== YOUR CODE: ======
         # Loop over layers of the model
         for layer_idx in range(self.n_layers):
@@ -373,64 +369,5 @@ class MultilayerGRU(nn.Module):
         # Final output: transform the input to the next (non-existent) layer
         layer_output = self.why(layer_input)  # (B, S, O)
         hidden_state = torch.stack(layer_states, dim=1)  # (B, L, H)
-        # ========================
-        return layer_output, hidden_state
-    
-    # TODO LEFT: remove this
-    def forward_my(self, input: Tensor, hidden_state: Tensor = None):
-        """
-        :param input: Batch of sequences. Shape should be (B, S, I) where B is
-        the batch size, S is the length of each sequence and I is the
-        input dimension (number of chars in the case of a char RNN).
-        :param hidden_state: Initial hidden state per layer (for the first
-        char). Shape should be (B, L, H) where B is the batch size, L is the
-        number of layers, and H is the number of hidden dimensions.
-        :return: A tuple of (layer_output, hidden_state).
-        The layer_output tensor is the output of the last RNN layer,
-        of shape (B, S, O) where B,S are as above and O is the output
-        dimension.
-        The hidden_state tensor is the final hidden state, per layer, of shape
-        (B, L, H) as above.
-        """
-        batch_size, seq_len, _ = input.shape
-
-        layer_states = []
-        for i in range(self.n_layers):
-            if hidden_state is None:
-                layer_states.append(
-                    torch.zeros(batch_size, self.h_dim, device=input.device)
-                )
-            else:
-                layer_states.append(hidden_state[:, i, :])
-
-        layer_input = input
-        layer_output = None
-
-        # TODO:
-        #  Implement the model's forward pass.
-        #  You'll need to go layer-by-layer from bottom to top (see diagram).
-        #  Tip: You can use torch.stack() to combine multiple tensors into a
-        #  single tensor in a differentiable manner.
-        # ====== YOUR CODE: ======
-        # Implement the forward pass
-        outputs = []
-
-        for t in range(seq_len):
-            x_t = layer_input[:, t, :]
-            new_states = []
-            for i, layer in enumerate(self.layer_params):
-                h_t = layer_states[i]
-                z_t = torch.sigmoid(layer['xz'](x_t) + layer['hz'](h_t))
-                r_t = torch.sigmoid(layer['xr'](x_t) + layer['hr'](h_t))
-                g_t = torch.tanh(layer['xg'](x_t) + layer['hg'](r_t * h_t))
-                h_t = z_t * h_t + (1 - z_t) * g_t
-                x_t = self.dropout(h_t)
-                new_states.append(h_t)
-            layer_states = new_states
-            outputs.append(x_t)
-
-        layer_output = torch.stack(outputs, dim=1)
-        hidden_state = torch.stack(layer_states, dim=1)
-        layer_output = self.why(layer_output)
         # ========================
         return layer_output, hidden_state
