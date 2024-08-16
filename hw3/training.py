@@ -97,16 +97,16 @@ class Trainer(abc.ABC):
             test_result = self.test_epoch(dl_test, verbose=verbose, **kw)
             
             #Save losses and accurcies
-            train_loss.extend(train_result.losses)  # TODO LEFT: see if we can use mean loss instead
+            train_loss.append(sum(train_result.losses) / len(train_result.losses))
             train_acc.append(train_result.accuracy)
-            test_loss.extend(test_result.losses)
+            test_loss.append(sum(test_result.losses) / len(test_result.losses))
             test_acc.append(test_result.accuracy)
 
             if best_acc is None or test_result.accuracy > best_acc:
                 best_acc = test_result.accuracy
                 epochs_without_improvement = 0
 
-                if checkpoints is not None:  #TODO LEFT: see if this is needed
+                if checkpoints is not None:
                     save_checkpoint = True
             else:
                 epochs_without_improvement += 1
@@ -314,7 +314,7 @@ class VAETrainer(Trainer):
         x = x.to(self.device)  # Image batch (N,C,H,W)
         # TODO: Train a VAE on one batch.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        # raise NotImplementedError()
         # ========================
 
         return BatchResult(loss.item(), 1 / data_loss.item())
@@ -326,7 +326,9 @@ class VAETrainer(Trainer):
         with torch.no_grad():
             # TODO: Evaluate a VAE on one batch.
             # ====== YOUR CODE: ======
-            raise NotImplementedError()    
+            loss = 0
+            data_loss = 0
+            # raise NotImplementedError()    
             # ========================
 
         return BatchResult(loss.item(), 1 / data_loss.item())

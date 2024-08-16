@@ -22,12 +22,12 @@ def part1_rnn_hyperparams():
     )
     # TODO: Set the hyperparameters to train the model.
     # ====== YOUR CODE: ======
-    hypers = dict(  # TODO LEFT: tweak if have time
+    hypers = dict(  
         batch_size=512,  # largeer batch size => speed training
         seq_len=64,
-        h_dim=128,  # smaller h_dim => speed training but consider 256
-        n_layers=2,  # fewer layers => speed training but consider 3
-        dropout=0.3,  # consider 0.2
+        h_dim=128,  # smaller h_dim => speed training
+        n_layers=2,  # fewer layers => speed training
+        dropout=0.3,  
         learn_rate=0.002,
         lr_sched_factor=0.1,
         lr_sched_patience=3,
@@ -135,16 +135,16 @@ def part3_gan_hyperparams():
     )
 
     hypers = dict(
-        batch_size=64, 
-        z_dim=100, 
+        batch_size=32, 
+        z_dim=128, 
         discriminator_optimizer={
             'type': 'Adam',
-            'lr': 0.0002,
+            'lr': 0.0001,
             'betas': (0.5, 0.999)
         }, 
         generator_optimizer={
             'type': 'Adam',
-            'lr': 0.0002,
+            'lr': 0.0001,
             'betas': (0.5, 0.999)
         }, 
         data_label=1.0,  # Assuming real data is labeled as 1
@@ -261,7 +261,7 @@ Additionally this extra calculation to the attention matrix is still $O(nw)$ bec
 
 part4_q1 = r"""
 **Your answer:**
-In this part I, when we fine-tuned just the final layers, the model average test loss starts by increasing and slightly improves later. This is explained because the model takes a few iterations to fine-tune the last layers to fit the new classification task (while it started from a completely different task), and only after finding the right parameters for sentiment analysis, the model begins to decrease the test loss and "learn". The accuracy slightly decreased between the two epochs, however this might just be chance and given a few more epochs it might improve slightly. What's important is that its accuracy is limited by the features the pretrained back-bone can find, which might not be optimal for this task. This explains why when we fine-tuned the full pretrained model we achieved a way better accuracy - 88% compared to 76%. This let the model both improve the classifier to sentiment analysis task, and the features extracted to focus on the sentiment task at hand.
+In the first part, when we fine-tuned just the final layers, the model average test loss starts by increasing and slightly improves later. This is explained because the model takes a few iterations to fine-tune the last layers to fit the new classification task (while it started from a completely different task), and only after finding the right parameters for sentiment analysis, the model begins to decrease the test loss and "learn". The accuracy slightly decreased between the two epochs, however this might just be chance and given a few more epochs it might improve slightly. What's important is that its accuracy is limited by the features the pretrained back-bone can find, which might not be optimal for this task. This explains why when we fine-tuned the full pretrained model we achieved a way better accuracy - 88% compared to 76%. This let the model both improve the classifier to sentiment analysis task, and the features extracted to focus on the sentiment task at hand.
 Compared to Part 3, fine-tuning the full model achieved better accuracy than the trained-from-scratch model, which makes sense because it was deeper and already trained to extract general useful features (like language syntax, context, and meaning). What's interesting to note is that the trained-from-scratch model achieved better accuracy than the fine-tuned-from-last-layers model, which means the pre-trained features on their own weren't optimal for sentiment analysis.
 In summary, the best accuracy was achieved by fine-tuning the entire pre-trained model, rather than just the last layers or training from scratch. This result will not always be correct for down-stream tasks (though in most cases it probably will) because some downstream tasks can be very specific and a better accuracy could be achieved by training from scratch for that task, rather than trying to fine-tune a model that was trained to extract non-relevant features for this task. An example could be training a model to understand astrophysics. While llms might know a lot of things they were shown in the training dataset, the information on the topic could be very sparse and it would be better to train a model from scratch only on data relating to the subject.
 

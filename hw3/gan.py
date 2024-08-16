@@ -279,7 +279,7 @@ def save_checkpoint(gen_model, dsc_losses, gen_losses, checkpoint_file):
     # ====== YOUR CODE: ======
 
     # Criterion: Save if the generator's avg loss improved
-    if len(gen_losses) > 1 and gen_losses[-1] < min(gen_losses[:-1]):
+    if len(gen_losses) == 1 or len(gen_losses) > 5 and gen_losses[-1] < min(gen_losses[-5:-1]):
         gen_model = {
             'model_state_dict': gen_model.state_dict(),
             'dsc_losses': dsc_losses,
