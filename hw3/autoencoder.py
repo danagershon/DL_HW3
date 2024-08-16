@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class EncoderCNN(nn.Module):  # TODO LEFT: write a test for this code? the notebook does not test it
+class EncoderCNN(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
 
