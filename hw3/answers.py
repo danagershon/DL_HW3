@@ -275,19 +275,22 @@ Worse. The internal model layer (back-bone) are the feature extractors, that und
 
 part4_q3= r"""
 **Your answer:**
-
-
+While its not impossible, it isn't effective to use BERT for machine translation because BERT uses an encoder-only architecture and was trained to understand the English language's features and meaning and not to generate new text in a new language. To be able to train it for machine translation it would be way more effective to:     
+(1) Change the architecture to encoder-decoder transformer     .  
+(2) Modify the text tokenizer to support Language 1 on input tokens and Language 2 on output tokens.     
+(3) Pre-train it on **both languages** with the input being a tokenized sentence from Language 1, and the output being the tokenized version of the same sentence, in Language 2.      
+This changes will make the model better for machine translation.
 """
 
 part4_q4 = r"""
 **Your answer:**
-
+A possible main reason for using RNNs could be memory efficiency. The transformer architecture is limited by the overhead of a maximum sentence length. Specifically, if you want to handle large sentences you need to train the model with a large max-sentence-length, which means the model has to be larger just to be able to handle a few rare cases. This means that transformers need to be very large to handle every case, or be smaller but not work on some cases. RNNs however are flexible and you only need to remember the last model state and continue running through the model as long as you like, without the overhead of extra memory. This allows RNNs to run on low-memory systems and still work for longer sentences.
 
 """
 
 part4_q5 = r"""
 **Your answer:**
-
+NSP (Next Sentence Prediction) is a NLP task where the model is given two sentences (seperated by a special [SEP] character) and is tasked to classify whether the sentences come after each other in the original text they were selected from. The loss is typically Binary Cross Entropy because the labels are 0/1 and we want to compare the model's output probability to the ground-truth. We think that this is a crucial part of pre-training. This task trains the model to understand the relationships between sentences, and how they relate to eachother. It is important that the model understands the meaning of each sentence, but this task also allows it to understand how one sentence affects the other, and allow it to extract long-term context (for many sentences) rather than just understanding each sentence on its own.
 
 """
 
