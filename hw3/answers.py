@@ -135,16 +135,16 @@ def part3_gan_hyperparams():
     )
 
     hypers = dict(
-        batch_size=64, 
-        z_dim=100, 
+        batch_size=32, 
+        z_dim=128, 
         discriminator_optimizer={
             'type': 'Adam',
-            'lr': 0.0002,
+            'lr': 0.0001,
             'betas': (0.5, 0.999)
         }, 
         generator_optimizer={
             'type': 'Adam',
-            'lr': 0.0002,
+            'lr': 0.0001,
             'betas': (0.5, 0.999)
         }, 
         data_label=1.0,  # Assuming real data is labeled as 1
