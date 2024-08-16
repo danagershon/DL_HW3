@@ -46,12 +46,14 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
         dims += [num_heads]
     
     b = torch.ones([*dims, seq_len, seq_len], device=q.device) * (-float('inf'))  
-    #2d tensor containing the indexes to calculate dot prod on, i.e [0,0],[1,1], [2,1], [1,2]]
-    masked_ind = torch.tensor([], dtype=int, device=q.device)
 
-    for i in range(window_size//2 + 1): #TODO LEFT is this allowed? it is O(window_size)
-        masked_ind = torch.cat([masked_ind, torch.stack([torch.arange(i, seq_len, device=q.device), torch.arange(0, seq_len-i, device=q.device)], dim=1)])
-        masked_ind = torch.cat([masked_ind, torch.stack([torch.arange(0, seq_len-i, device=q.device), torch.arange(i, seq_len, device=q.device)], dim=1)])
+    #Calculate mask_ind, a tensor of size [N, 2]
+    #Which has the indexes to calculate dot prod on, i.e [0,0],[1,1], [2,1], [1,2]...
+    masked_ind = torch.ones(seq_len, seq_len)
+    masked_ind = masked_ind - torch.triu(masked_ind, diagonal=window_size//2+1) - torch.tril(masked_ind, diagonal=(-1)*(window_size//2+1))
+    #Convert to indices tensor
+    rows, cols = torch.where(masked_ind == 1)
+    masked_ind = torch.column_stack([rows,cols])
     
     #On these indices, do b = (q @ k.transpose(1,-1)) = q.dot(k) on every i,j in masked_ind
     b[..., masked_ind[:,0], masked_ind[:,1]] = (q[..., masked_ind[:,0], :] * k[..., masked_ind[:,1], :]).sum(dim=-1)
