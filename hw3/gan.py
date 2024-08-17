@@ -22,7 +22,6 @@ class Discriminator(nn.Module):
         # ====== YOUR CODE: ======
         in_channels, h, w = in_size
 
-        # Define the convolutional layers
         modules = []
         channels = [in_channels, 64, 128, 256, 512, 1]
         for i in range(len(channels) - 1):
@@ -78,7 +77,6 @@ class Generator(nn.Module):
         #  section or implement something new.
         #  You can assume a fixed image size.
         # ====== YOUR CODE: ======
-        # Define the transpose convolutional layers using a loop
         modules = []
         channels = [z_dim, 512, 256, 128, 64, out_channels]
         strides = [1, 2, 2, 2, 2]
@@ -278,7 +276,7 @@ def save_checkpoint(gen_model, dsc_losses, gen_losses, checkpoint_file):
     #  If you save, set saved to True.
     # ====== YOUR CODE: ======
 
-    # Criterion: Save if the generator's avg loss improved
+    # save if its the first epoch or if the loss is lower that the previous 4 losses
     if len(gen_losses) == 1 or len(gen_losses) > 5 and gen_losses[-1] < min(gen_losses[-5:-1]):
         gen_model = {
             'model_state_dict': gen_model.state_dict(),
